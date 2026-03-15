@@ -22,6 +22,27 @@ type Repository struct {
 	CreatedAt   string `json:"created_at"`
 }
 
+func (r *Repository) String() string {
+	if r == nil {
+		return "nil repository"
+	}
+
+	return fmt.Sprintf(
+		"--------------------------------------------------\n"+
+			"%sRepository:%s  %s\n"+
+			"%sDescription:%s %s\n"+
+			"%sStars:%s       %d\n"+
+			"%sForks:%s       %d\n"+
+			"%sCreated at:%s  %s\n"+
+			"--------------------------------------------------",
+		colorCyan, colorReset, r.Name,
+		colorCyan, colorReset, r.Description,
+		colorCyan, colorYellow, r.Stars,
+		colorCyan, colorReset, r.Forks,
+		colorCyan, colorReset, r.CreatedAt,
+	)
+}
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -40,7 +61,7 @@ func run() error {
 		return fmt.Errorf("fetch: %w", err)
 	}
 
-	printRepoInfo(repoInfo)
+	fmt.Println(repoInfo)
 
 	return nil
 }
@@ -63,17 +84,4 @@ func fetchRepository(path string) (*Repository, error) {
 	}
 
 	return &repo, nil
-}
-
-func printRepoInfo(repo *Repository) {
-	if repo == nil {
-		return
-	}
-	fmt.Println("--------------------------------------------------")
-	fmt.Printf("%sRepository:%s  %s\n", colorCyan, colorReset, repo.Name)
-	fmt.Printf("%sDescription:%s %s\n", colorCyan, colorReset, repo.Description)
-	fmt.Printf("%sStars:%s       %d\n", colorCyan, colorYellow, repo.Stars)
-	fmt.Printf("%sForks:%s       %d\n", colorCyan, colorReset, repo.Forks)
-	fmt.Printf("%sCreated at:%s  %s\n", colorCyan, colorReset, repo.CreatedAt)
-	fmt.Println("--------------------------------------------------")
 }
