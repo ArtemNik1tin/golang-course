@@ -12,6 +12,7 @@ import (
 
 type CollectorClient struct {
 	grpcClient pb.CollectorServiceClient
+	conn       *grpc.ClientConn
 }
 
 func NewCollectorClient(address string) (*CollectorClient, error) {
@@ -37,4 +38,8 @@ func (client CollectorClient) Fetch(ctx context.Context, ownerName string, repoN
 		Forks:       int(response.Forks),
 		CreatedAt:   response.CreatedAt,
 	}, nil
+}
+
+func (client *CollectorClient) Close() error {
+	return client.conn.Close()
 }
