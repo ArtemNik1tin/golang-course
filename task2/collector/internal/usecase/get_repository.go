@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/ArtemNik1tin/collector/internal/domain"
+	"github.com/ArtemNik1tin/distributed-github/collector/internal/domain"
 )
 
 type RepositoryFetcher interface {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ArtemNik1tin/collector/internal/domain"
+	"github.com/ArtemNik1tin/distributed-github/collector/internal/domain"
 )
 
 type GitHubClient struct {
@@ -30,7 +30,7 @@ func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName
 	}
 
 	var repo domain.Repository
-	if err := json.NewDecoder(request.Body).Decode(&repo); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&repo); err != nil {
 		return nil, err
 	}
 
