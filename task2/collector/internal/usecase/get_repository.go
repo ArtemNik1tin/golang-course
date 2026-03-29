@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ArtemNik1tin/distributed-github/collector/internal/domain"
 )
@@ -19,5 +20,8 @@ func NewGetRepositoryUseCase(repositoryFetcher RepositoryFetcher) GetRepositoryU
 }
 
 func (useCase *GetRepositoryUseCase) Execute(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error) {
+	if ownerName == "" || repoName == "" {
+		return nil, fmt.Errorf("UseCase execute error: repoName and ownerName should be non empty.")
+	}
 	return useCase.fetcher.Fetch(ctx, ownerName, repoName)
 }

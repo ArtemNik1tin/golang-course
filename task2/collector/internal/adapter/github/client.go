@@ -9,6 +9,14 @@ import (
 	"github.com/ArtemNik1tin/distributed-github/collector/internal/domain"
 )
 
+type GithubRepository struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Stars       int    `json:"stargazers_count"`
+	Forks       int    `json:"forks_count"`
+	CreatedAt   string `json:"created_at"`
+}
+
 type GitHubClient struct {
 }
 
@@ -29,10 +37,20 @@ func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName
 		return nil, fmt.Errorf("github api error: %s", response.Status)
 	}
 
-	var repo domain.Repository
+	var repo GithubRepository
 	if err := json.NewDecoder(response.Body).Decode(&repo); err != nil {
 		return nil, err
 	}
 
-	return &repo, nil
+	return repo.toDomain(), nil
+}
+
+func (githubRepo *GithubRepository) toDomain() *domain.Repository {
+	return &domain.Repository{
+		Name:        githubRepo.Name,
+		Description: githubRepo.Description,
+		Stars:       githubRepo.Stars,
+		Forks:       githubRepo.Forks,
+		CreatedAt:   githubRepo.CreatedAt,
+	}
 }

@@ -10,6 +10,14 @@ import (
 	"github.com/ArtemNik1tin/distributed-github/gateway/internal/usecase"
 )
 
+type RepositoryResponse struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Stars       int    `json:"stars"`
+	Forks       int    `json:"forks"`
+	CreatedAt   string `json:"created_at"`
+}
+
 type Handler struct {
 	useCase *usecase.GetRepositoryUseCase
 }
@@ -51,12 +59,12 @@ func (handler Handler) GetRepository(responseWriter http.ResponseWriter, httpReq
 		return
 	}
 
-	response := map[string]interface{}{
-		"name":        repo.Name,
-		"description": repo.Description,
-		"stars":       repo.Stars,
-		"forks":       repo.Forks,
-		"created_at":  repo.CreatedAt,
+	response := RepositoryResponse{
+		Name:        repo.Name,
+		Description: repo.Description,
+		Stars:       repo.Stars,
+		Forks:       repo.Forks,
+		CreatedAt:   repo.CreatedAt,
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")

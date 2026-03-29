@@ -7,7 +7,7 @@ import (
 
 	pb "github.com/ArtemNik1tin/distributed-github/api/proto"
 	"github.com/ArtemNik1tin/distributed-github/collector/internal/adapter/github"
-	grpchandler "github.com/ArtemNik1tin/distributed-github/collector/internal/adapter/grpc"
+	grpchandler "github.com/ArtemNik1tin/distributed-github/collector/internal/grpc"
 	"github.com/ArtemNik1tin/distributed-github/collector/internal/usecase"
 	"google.golang.org/grpc"
 )
