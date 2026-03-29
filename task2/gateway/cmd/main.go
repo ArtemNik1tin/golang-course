@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/ArtemNik1tin/distributed-github/gateway/docs"
 	grpcclient "github.com/ArtemNik1tin/distributed-github/gateway/internal/adapter/grpc"
-	"github.com/ArtemNik1tin/distributed-github/gateway/internal/adapter/rest"
+	"github.com/ArtemNik1tin/distributed-github/gateway/internal/rest"
 	"github.com/ArtemNik1tin/distributed-github/gateway/internal/usecase"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
