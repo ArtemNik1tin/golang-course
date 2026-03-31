@@ -43,6 +43,10 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
+func (c *Client) Name() string {
+	return "subscriber"
+}
+
 func (c *Client) Close() error {
 	return c.conn.Close()
 }

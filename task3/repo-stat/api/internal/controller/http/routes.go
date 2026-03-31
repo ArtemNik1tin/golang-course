@@ -6,6 +6,12 @@ import (
 	"repo-stat/api/internal/usecase"
 )
 
-func AddRoutes(mux *http.ServeMux, log *slog.Logger, ping *usecase.Ping) {
-	mux.Handle("GET /api/ping", NewPingHandler(log, ping))
+func AddRoutes(
+	mux *http.ServeMux,
+	log *slog.Logger,
+	pingUC *usecase.Ping,
+	repoUC *usecase.GetRepositoryUseCase,
+) {
+	mux.Handle("GET /api/ping", NewPingHandler(log, pingUC))
+	mux.Handle("GET /api/repositories/info", NewGetRepositoryInfoHandler(log, repoUC))
 }
