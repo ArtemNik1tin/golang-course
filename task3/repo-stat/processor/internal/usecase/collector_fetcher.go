@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"repo-stat/processor/internal/domain"
+	"repo-stat/pkg/domain"
 )
 
 type CollectorFetcher interface {

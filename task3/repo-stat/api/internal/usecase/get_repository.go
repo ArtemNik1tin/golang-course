@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"repo-stat/api/internal/domain"
+	"repo-stat/pkg/domain"
 )
 
 type RepositoryFetcher interface {

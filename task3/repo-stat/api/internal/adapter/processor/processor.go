@@ -3,7 +3,8 @@ package processor
 import (
 	"context"
 	"log/slog"
-	"repo-stat/api/internal/domain"
+	apidomain "repo-stat/api/internal/domain"
+	pkgdomain "repo-stat/pkg/domain"
 
 	processorpb "repo-stat/proto/processor"
 
@@ -33,7 +34,7 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*domain.Repository, error) {
+func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*pkgdomain.Repository, error) {
 	getRepositoryInfoRequest := &processorpb.GetRepositoryInfoRequest{
 		Owner: owner,
 		Repo:  repository,
@@ -45,7 +46,7 @@ func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*d
 		return nil, err
 	}
 
-	return &domain.Repository{
+	return &pkgdomain.Repository{
 		Name:        response.FullName,
 		Description: response.Description,
 		Stars:       response.Stars,
@@ -54,14 +55,14 @@ func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*d
 	}, nil
 }
 
-func (c *Client) Ping(ctx context.Context) domain.PingStatus {
+func (c *Client) Ping(ctx context.Context) apidomain.PingStatus {
 	_, err := c.pb.Ping(ctx, &processorpb.PingRequest{})
 	if err != nil {
 		c.log.Error("processor ping failed", "error", err)
-		return domain.PingStatusDown
+		return apidomain.PingStatusDown
 	}
 
-	return domain.PingStatusUp
+	return apidomain.PingStatusUp
 }
 
 func (c *Client) Name() string {

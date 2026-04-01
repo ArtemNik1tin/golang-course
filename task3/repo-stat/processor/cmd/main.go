@@ -36,7 +36,8 @@ func main() {
 
 	collClient, err := collector.NewClient("localhost:50002", log)
 	if err != nil {
-		log.Error("failed to init", "err", err)
+		log.Error("failed to init collector client", "err", err)
+		return
 	}
 	defer collClient.Close()
 

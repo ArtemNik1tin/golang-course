@@ -3,7 +3,7 @@ package collector
 import (
 	"context"
 	"log/slog"
-	"repo-stat/processor/internal/domain"
+	"repo-stat/pkg/domain"
 
 	collectorpb "repo-stat/proto/collector"
 

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"repo-stat/collector/internal/domain"
+	"repo-stat/pkg/domain"
 )
 
 type GitHubFetcher interface {
