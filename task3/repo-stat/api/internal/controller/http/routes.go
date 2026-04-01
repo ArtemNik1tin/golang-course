@@ -18,11 +18,13 @@ func AddRoutes(
 	docs.SwaggerInfo.Title = "Repo Stat API"
 	docs.SwaggerInfo.Description = "API Gateway for repo-stat microservice"
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:8080"
+	docs.SwaggerInfo.Host = "localhost:28080"
 	docs.SwaggerInfo.BasePath = "/"
 
 	mux.Handle("GET /api/ping", NewPingHandler(log, pingUC))
 	mux.Handle("GET /api/repositories/info", NewGetRepositoryInfoHandler(log, repoUC))
 	mux.Handle("/swagger/doc.json", httpSwagger.WrapHandler)
-	mux.Handle("/swagger/", httpSwagger.Handler())
+	mux.Handle("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("swagger/doc.json"),
+	))
 }
