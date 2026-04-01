@@ -15,6 +15,18 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+// GetRepositoryInfo godoc
+//
+//	@Summary		Get repository information
+//	@Description	Retrieve basic information about a GitHub repository
+//	@Tags			repositories
+//	@Accept			json
+//	@Produce		json
+//	@Param			url	query		string	true	"GitHub repository URL"
+//	@Success		200	{object}	dto.Repository
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
+//	@Router			/api/repositories/info [get]
 func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase.GetRepositoryUseCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawURL := r.URL.Query().Get("url")
