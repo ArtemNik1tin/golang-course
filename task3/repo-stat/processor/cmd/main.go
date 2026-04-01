@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"log"
+	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"google.golang.org/grpc"
 
@@ -15,12 +19,7 @@ import (
 	processorpb "repo-stat/proto/processor"
 )
 
-func main() {
-	lis, err := net.Listen("tcp", ":50001")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
+func run(ctx context.Context) error {
 	// config
 	var configPath string
 	flag.StringVar(&configPath, "config", "config.yaml", "server configuration file")
@@ -34,23 +33,47 @@ func main() {
 	log.Info("starting server...")
 	log.Debug("debug messages are enabled")
 
-	collClient, err := collector.NewClient("localhost:50002", log)
+	// Server setup
+	listener, err := net.Listen("tcp", cfg.Services.Processor)
+	if err != nil {
+		log.Error("failed to listen", "error", err)
+		return err
+	}
+
+	collClient, err := collector.NewClient(cfg.Services.Collector, log)
 	if err != nil {
 		log.Error("failed to init collector client", "err", err)
-		return
+		return err
 	}
 	defer collClient.Close()
 
+	// Setup handlers
 	repoUC := usecase.NewGetRepositoryUseCase(collClient)
-
 	handler := grpccontroller.NewHandler(repoUC)
 
-	s := grpc.NewServer()
+	grpcServer := grpc.NewServer()
+	processorpb.RegisterProcessorServer(grpcServer, handler)
 
-	processorpb.RegisterProcessorServer(s, handler)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		grpcServer.Serve(listener)
+	}()
+	<-sigCh
+	grpcServer.GracefulStop()
+	return nil
+}
 
-	log.Info("Processor gRPC server is running on :50001...")
-	if err := s.Serve(lis); err != nil {
-		log.Error("failed to serve", "err", err)
+func main() {
+	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	if err := run(ctx); err != nil {
+		_, err = fmt.Fprintln(os.Stderr, err)
+		if err != nil {
+			fmt.Printf("launching server error: %s\n", err)
+		}
+		cancel()
+		os.Exit(1)
 	}
+	cancel()
 }

@@ -27,6 +27,8 @@ func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName
 		return nil, fmt.Errorf("http request error: %w", httpRequestErr)
 	}
 
+	request.Header.Set("User-Agent", "repo-stat-collector")
+
 	response, httpResponseErr := http.DefaultClient.Do(request)
 	if httpResponseErr != nil {
 		return nil, fmt.Errorf("http response error: %w", httpResponseErr)
