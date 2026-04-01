@@ -1,22 +1,24 @@
 syntax = "proto3";
 
-package collector.v1; 
+package collector.v1;
 
-option go_package = "repo-stat/proto/collector;collectorpb";
+option go_package =
+    "repo-stat/proto/collector;collectorpb";
 
 service Collector {
-  rpc GetRepositoryInfo(GetRepositoryInfoRequest) returns (GetRepositoryInfoResponse);
+  rpc GetRepositoryInfo(GetRepositoryInfoRequest)
+      returns (GetRepositoryInfoResponse);
 }
 
 message GetRepositoryInfoRequest {
-    string owner = 1;
-    string repo = 2;
+  string owner = 1;
+  string repo = 2;
 }
 
 message GetRepositoryInfoResponse {
-    string full_name = 1;
-    string description = 2;
-    uint32 stars = 3;
-    uint32 forks = 4;
-    string created_at = 5;
+  string full_name = 1;
+  string description = 2;
+  uint32 stars = 3;
+  uint32 forks = 4;
+  string created_at = 5;
 }

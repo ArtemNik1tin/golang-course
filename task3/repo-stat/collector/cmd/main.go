@@ -53,7 +53,7 @@ func run(ctx context.Context) error {
 	grpcHandler := grpchandler.NewHandler(getRepoUseCase)
 	listener, err := net.Listen("tcp", cfg.Services.CollectorAddress)
 	if err != nil {
-		return fmt.Errorf("Listen error: %w", err)
+		return fmt.Errorf("listen error: %w", err)
 	}
 
 	// Server setup
@@ -61,7 +61,7 @@ func run(ctx context.Context) error {
 	collectorpb.RegisterCollectorServer(grpcServer, grpcHandler)
 
 	go func() {
-		grpcServer.Serve(listener)
+		_ = grpcServer.Serve(listener)
 	}()
 	<-ctx.Done()
 	grpcServer.GracefulStop()

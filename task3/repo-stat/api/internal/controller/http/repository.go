@@ -35,7 +35,7 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 			log.Warn("url parameter is missing")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ErrorResponse{Error: "url parameter is required"})
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "url parameter is required"})
 			return
 		}
 
@@ -44,7 +44,7 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 			log.Warn("invalid url provided", "url", rawURL)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ErrorResponse{Error: "Invalid GitHub URL"})
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Invalid GitHub URL"})
 			return
 		}
 
@@ -55,7 +55,7 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 			log.Error("usecase error", "err", err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ErrorResponse{Error: "Internal Server Error"})
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Internal Server Error"})
 			return
 		}
 

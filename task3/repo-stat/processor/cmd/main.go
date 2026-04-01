@@ -44,7 +44,7 @@ func run(ctx context.Context) error {
 		log.Error("failed to init collector client", "err", err)
 		return err
 	}
-	defer collClient.Close()
+	defer func() { _ = collClient.Close() }()
 
 	// Setup handlers
 	repoUC := usecase.NewGetRepositoryUseCase(collClient)
@@ -55,7 +55,7 @@ func run(ctx context.Context) error {
 
 	go func() {
 		log.Info("Processor gRPC server is running on " + cfg.Services.Processor)
-		grpcServer.Serve(listener)
+		_ = grpcServer.Serve(listener)
 	}()
 	<-ctx.Done()
 	grpcServer.GracefulStop()

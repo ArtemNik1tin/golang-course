@@ -1,11 +1,13 @@
 syntax = "proto3";
 
-package processor.v1; 
+package processor.v1;
 
-option go_package = "repo-stat/proto/processor;processorpb";
+option go_package =
+    "repo-stat/proto/processor;processorpb";
 
 service Processor {
-  rpc GetRepositoryInfo(GetRepositoryInfoRequest) returns (GetRepositoryInfoResponse);
+  rpc GetRepositoryInfo(GetRepositoryInfoRequest)
+      returns (GetRepositoryInfoResponse);
   rpc Ping(PingRequest) returns (PingResponse);
 }
 
@@ -17,14 +19,14 @@ message PingResponse {
 }
 
 message GetRepositoryInfoRequest {
-    string owner = 1;
-    string repo = 2;
+  string owner = 1;
+  string repo = 2;
 }
 
 message GetRepositoryInfoResponse {
-    string full_name = 1;
-    string description = 2;
-    uint32 stars = 3;
-    uint32 forks = 4;
-    string created_at = 5;
+  string full_name = 1;
+  string description = 2;
+  uint32 stars = 3;
+  uint32 forks = 4;
+  string created_at = 5;
 }

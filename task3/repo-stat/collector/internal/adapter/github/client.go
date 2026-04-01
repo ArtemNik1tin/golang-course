@@ -34,7 +34,7 @@ func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName
 	if httpResponseErr != nil {
 		return nil, fmt.Errorf("http response error: %w", httpResponseErr)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("github api error: %s", response.Status)
