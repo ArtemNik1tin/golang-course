@@ -10,6 +10,7 @@ import (
 )
 
 type GithubRepository struct {
+	FullName    string `json:"full_name"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Stars       int    `json:"stargazers_count"`
@@ -49,7 +50,7 @@ func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName
 
 func (githubRepo *GithubRepository) toDomain() *domain.Repository {
 	return &domain.Repository{
-		Name:        githubRepo.Name,
+		Name:        githubRepo.FullName,
 		Description: githubRepo.Description,
 		Stars:       uint32(githubRepo.Stars),
 		Forks:       uint32(githubRepo.Forks),

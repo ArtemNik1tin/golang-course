@@ -51,7 +51,7 @@ func run(ctx context.Context) error {
 	client := github.GitHubClient{}
 	getRepoUseCase := usecase.NewGitHubFetchUseCase(client)
 	grpcHandler := grpchandler.NewHandler(getRepoUseCase)
-	listener, err := net.Listen("tcp", cfg.Services.Collector)
+	listener, err := net.Listen("tcp", cfg.Services.CollectorAddress)
 	if err != nil {
 		return fmt.Errorf("Listen error: %w", err)
 	}

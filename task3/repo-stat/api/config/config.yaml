@@ -2,13 +2,15 @@ app:
   app_name: "repo-stat-api"
 
 http:
-  address: "localhost:8080"
+  address: ":8080"
   timeout: "5s"
 
 logger:
   log_level: "DEBUG"
 
 services:
-  subscriber: "localhost:8081"
-  processor: "localhost:50001"
-  collector: "localhost:50002"
+  subscriber: "subscriber:8080"
+  processor: "processor:50001"
+  processor_address: ":50001"
+  collector: "collector:50002"
+  collector_address: ":50002"

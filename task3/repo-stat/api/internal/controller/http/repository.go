@@ -11,14 +11,28 @@ import (
 
 var regularExpression = regexp.MustCompile(`github\.com/([^/]+)/([^/]+)`)
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase.GetRepositoryUseCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawURL := r.URL.Query().Get("url")
 
+		if rawURL == "" {
+			log.Warn("url parameter is missing")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "url parameter is required"})
+			return
+		}
+
 		matches := regularExpression.FindStringSubmatch(rawURL)
 		if len(matches) < 3 {
 			log.Warn("invalid url provided", "url", rawURL)
-			http.Error(w, "Invalid GitHub URL", http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "Invalid GitHub URL"})
 			return
 		}
 
@@ -27,12 +41,14 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 		repository, err := getRepositoryUseCase.Execute(r.Context(), ownerName, repoName)
 		if err != nil {
 			log.Error("usecase error", "err", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "Internal Server Error"})
 			return
 		}
 
 		response := dto.Repository{
-			Name:        repository.Name,
+			FullName:    repository.Name,
 			Description: repository.Description,
 			Stars:       repository.Stars,
 			Forks:       repository.Forks,
@@ -40,9 +56,6 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			log.Error("failed to write ping response", "error", err)
-		}
+		json.NewEncoder(w).Encode(response)
 	}
 }

@@ -1,7 +1,7 @@
 package dto
 
 type Repository struct {
-	Name        string `json:"name"`
+	FullName    string `json:"full_name"`
 	Description string `json:"description"`
 	Stars       uint32 `json:"stars"`
 	Forks       uint32 `json:"forks"`

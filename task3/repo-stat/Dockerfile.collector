@@ -7,20 +7,23 @@ ENV PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY go.mod go.sum /src/
 COPY proto /src/proto
+COPY collector /src/collector
+COPY platform /src/platform
 COPY api /src/api
 COPY pkg /src/pkg
-COPY platform /src/platform
 
 RUN cd /src && \
     protoc --go_out=.      --go_opt=paths=source_relative \
            --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-           proto/subscriber/subscriber.proto
+           proto/collector/collector.proto
 
 ENV CGO_ENABLED=0
-RUN cd /src && go build -o /api api/cmd/app/main.go
+RUN cd /src && go build -o /collector collector/cmd/main.go
 
-FROM scratch
+FROM debian:stable-slim
 
-COPY --from=build /api /api
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["/api", "-config", "/config.yaml"]
+COPY --from=build /collector /collector
+
+ENTRYPOINT ["/collector", "-config", "/config.yaml"]
