@@ -9,4 +9,5 @@ logger:
   log_level: "DEBUG"
 
 services:
-  subscriber: "localhost:8081"
+  subscriber: "localhost:50001"
+  processor: "localhost:50001"
