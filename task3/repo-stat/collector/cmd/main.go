@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"repo-stat/api/config"
 	"repo-stat/collector/internal/adapter/github"
@@ -46,6 +45,7 @@ func run(ctx context.Context) error {
 
 	log.Info("starting server...")
 	log.Debug("debug messages are enabled")
+	log.Info("Collector gRPC server is running on " + cfg.Services.Collector)
 
 	// Hendlers setup
 	client := github.GitHubClient{}
@@ -60,13 +60,10 @@ func run(ctx context.Context) error {
 	grpcServer := grpc.NewServer()
 	collectorpb.RegisterCollectorServer(grpcServer, grpcHandler)
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		grpcServer.Serve(listener)
-		log.Info("Collector gRPC server is running on " + cfg.Services.Collector)
 	}()
-	<-sigCh
+	<-ctx.Done()
 	grpcServer.GracefulStop()
 	return nil
 }

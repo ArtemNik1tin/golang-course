@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"repo-stat/api/internal/domain"
 
-	subscirberpb "repo-stat/proto/subscriber"
+	subscriberpb "repo-stat/proto/subscriber"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,7 +14,7 @@ import (
 type Client struct {
 	log  *slog.Logger
 	conn *grpc.ClientConn
-	pb   subscirberpb.SubscriberClient
+	pb   subscriberpb.SubscriberClient
 }
 
 func NewClient(address string, log *slog.Logger) (*Client, error) {
@@ -29,12 +29,12 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	return &Client{
 		log:  log,
 		conn: conn,
-		pb:   subscirberpb.NewSubscriberClient(conn),
+		pb:   subscriberpb.NewSubscriberClient(conn),
 	}, nil
 }
 
 func (c *Client) Ping(ctx context.Context) domain.PingStatus {
-	_, err := c.pb.Ping(ctx, &subscirberpb.PingRequest{})
+	_, err := c.pb.Ping(ctx, &subscriberpb.PingRequest{})
 	if err != nil {
 		c.log.Error("subscriber ping failed", "error", err)
 		return domain.PingStatusDown

@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"google.golang.org/grpc"
 
@@ -54,12 +53,10 @@ func run(ctx context.Context) error {
 	grpcServer := grpc.NewServer()
 	processorpb.RegisterProcessorServer(grpcServer, handler)
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		grpcServer.Serve(listener)
 	}()
-	<-sigCh
+	<-ctx.Done()
 	grpcServer.GracefulStop()
 	return nil
 }
