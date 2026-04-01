@@ -68,6 +68,6 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}
 }
