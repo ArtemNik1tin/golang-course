@@ -1,5 +1,10 @@
 package dto
 
+import (
+	"repo-stat/api/internal/domain"
+)
+
 type PingResponse struct {
-	Reply string `json:"reply"`
+	Status   string                 `json:"status"`
+	Services []domain.ServiceStatus `json:"services"`
 }

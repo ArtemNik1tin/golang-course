@@ -59,31 +59,53 @@
 				
 				<option value="file1">repo-stat/api/config/config.go (0.0%)</option>
 				
-				<option value="file2">repo-stat/api/internal/adapter/subscriber/subscriber.go (0.0%)</option>
+				<option value="file2">repo-stat/api/internal/adapter/processor/processor.go (0.0%)</option>
 				
-				<option value="file3">repo-stat/api/internal/controller/http/handler.go (0.0%)</option>
+				<option value="file3">repo-stat/api/internal/adapter/subscriber/subscriber.go (0.0%)</option>
 				
-				<option value="file4">repo-stat/api/internal/controller/http/ping.go (0.0%)</option>
+				<option value="file4">repo-stat/api/internal/controller/http/handler.go (0.0%)</option>
 				
-				<option value="file5">repo-stat/api/internal/controller/http/routes.go (0.0%)</option>
+				<option value="file5">repo-stat/api/internal/controller/http/ping.go (0.0%)</option>
 				
-				<option value="file6">repo-stat/api/internal/usecase/ping.go (0.0%)</option>
+				<option value="file6">repo-stat/api/internal/controller/http/repository.go (0.0%)</option>
 				
-				<option value="file7">repo-stat/platform/env/loader.go (0.0%)</option>
+				<option value="file7">repo-stat/api/internal/controller/http/routes.go (0.0%)</option>
 				
-				<option value="file8">repo-stat/platform/grpcserver/grpcserver.go (0.0%)</option>
+				<option value="file8">repo-stat/api/internal/usecase/get_repository.go (0.0%)</option>
 				
-				<option value="file9">repo-stat/platform/httpserver/httpserver.go (0.0%)</option>
+				<option value="file9">repo-stat/api/internal/usecase/ping.go (0.0%)</option>
 				
-				<option value="file10">repo-stat/platform/logger/logger.go (0.0%)</option>
+				<option value="file10">repo-stat/collector/cmd/main.go (0.0%)</option>
 				
-				<option value="file11">repo-stat/subscriber/cmd/app/main.go (0.0%)</option>
+				<option value="file11">repo-stat/collector/internal/adapter/github/client.go (0.0%)</option>
 				
-				<option value="file12">repo-stat/subscriber/config/config.go (0.0%)</option>
+				<option value="file12">repo-stat/collector/internal/controller/grpc/handler.go (0.0%)</option>
 				
-				<option value="file13">repo-stat/subscriber/internal/controller/grpc/ping.go (0.0%)</option>
+				<option value="file13">repo-stat/collector/internal/usecase/github_fetcher.go (0.0%)</option>
 				
-				<option value="file14">repo-stat/subscriber/internal/usecase/ping.go (0.0%)</option>
+				<option value="file14">repo-stat/platform/env/loader.go (0.0%)</option>
+				
+				<option value="file15">repo-stat/platform/grpcserver/grpcserver.go (0.0%)</option>
+				
+				<option value="file16">repo-stat/platform/httpserver/httpserver.go (0.0%)</option>
+				
+				<option value="file17">repo-stat/platform/logger/logger.go (0.0%)</option>
+				
+				<option value="file18">repo-stat/processor/cmd/main.go (0.0%)</option>
+				
+				<option value="file19">repo-stat/processor/internal/adapter/collector/collector.go (0.0%)</option>
+				
+				<option value="file20">repo-stat/processor/internal/controller/grpc/handler.go (0.0%)</option>
+				
+				<option value="file21">repo-stat/processor/internal/usecase/collector_fetcher.go (0.0%)</option>
+				
+				<option value="file22">repo-stat/subscriber/cmd/app/main.go (0.0%)</option>
+				
+				<option value="file23">repo-stat/subscriber/config/config.go (0.0%)</option>
+				
+				<option value="file24">repo-stat/subscriber/internal/controller/grpc/ping.go (0.0%)</option>
+				
+				<option value="file25">repo-stat/subscriber/internal/usecase/ping.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -129,7 +151,6 @@ func run(ctx context.Context) error <span class="cov0" title="0">{
         cfg := config.MustLoad(configPath)
 
         // logger
-
         log := logger.MustMakeLogger(cfg.Logger.LogLevel)
 
         log.Info("starting server...")
@@ -161,6 +182,7 @@ func main() <span class="cov0" title="0">{
                 <span class="cov0" title="0">cancel()
                 os.Exit(1)</span>
         }
+        <span class="cov0" title="0">cancel()</span>
 }
 </pre>
 		
@@ -178,6 +200,8 @@ type App struct {
 
 type Services struct {
         Subscriber string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
+        Processor  string `yaml:"processor" env:"PROCESSOR_ADDRESS" env-default:"localhost:50001"`
+        Collector  string `yaml:"collector" env:"COLLECTOR_ADDRESS" env-default:"localhost:50002"`
 }
 
 type Config struct {
@@ -191,16 +215,18 @@ func MustLoad(path string) Config <span class="cov0" title="0">{
         var cfg Config
         env.MustLoad(path, &amp;cfg)
         return cfg
-}</pre>
+}</span>
+</pre>
 		
-		<pre class="file" id="file2" style="display: none">package subscriber
+		<pre class="file" id="file2" style="display: none">package processor
 
 import (
         "context"
         "log/slog"
-        "repo-stat/api/internal/domain"
+        apidomain "repo-stat/api/internal/domain"
+        pkgdomain "repo-stat/pkg/domain"
 
-        subscirberpb "repo-stat/proto/subscriber"
+        processorpb "repo-stat/proto/processor"
 
         "google.golang.org/grpc"
         "google.golang.org/grpc/credentials/insecure"
@@ -209,7 +235,7 @@ import (
 type Client struct {
         log  *slog.Logger
         conn *grpc.ClientConn
-        pb   subscirberpb.SubscriberClient
+        pb   processorpb.ProcessorClient
 }
 
 func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov0" title="0">{
@@ -224,12 +250,87 @@ func NewClient(address string, log *slog.Logger) (*Client, error) <span class="c
         <span class="cov0" title="0">return &amp;Client{
                 log:  log,
                 conn: conn,
-                pb:   subscirberpb.NewSubscriberClient(conn),
+                pb:   processorpb.NewProcessorClient(conn),
+        }, nil</span>
+}
+
+func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*pkgdomain.Repository, error) <span class="cov0" title="0">{
+        getRepositoryInfoRequest := &amp;processorpb.GetRepositoryInfoRequest{
+                Owner: owner,
+                Repo:  repository,
+        }
+
+        response, err := c.pb.GetRepositoryInfo(ctx, getRepositoryInfoRequest)
+        if err != nil </span><span class="cov0" title="0">{
+                c.log.Error("repository GetRepositoryInfo failed", "error", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;pkgdomain.Repository{
+                Name:        response.FullName,
+                Description: response.Description,
+                Stars:       response.Stars,
+                Forks:       response.Forks,
+                CreatedAt:   response.CreatedAt,
+        }, nil</span>
+}
+
+func (c *Client) Ping(ctx context.Context) apidomain.PingStatus <span class="cov0" title="0">{
+        _, err := c.pb.Ping(ctx, &amp;processorpb.PingRequest{})
+        if err != nil </span><span class="cov0" title="0">{
+                c.log.Error("processor ping failed", "error", err)
+                return apidomain.PingStatusDown
+        }</span>
+
+        <span class="cov0" title="0">return apidomain.PingStatusUp</span>
+}
+
+func (c *Client) Name() string <span class="cov0" title="0">{
+        return "processor"
+}</span>
+
+func (c *Client) Close() error <span class="cov0" title="0">{
+        return c.conn.Close()
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package subscriber
+
+import (
+        "context"
+        "log/slog"
+        "repo-stat/api/internal/domain"
+
+        subscriberpb "repo-stat/proto/subscriber"
+
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials/insecure"
+)
+
+type Client struct {
+        log  *slog.Logger
+        conn *grpc.ClientConn
+        pb   subscriberpb.SubscriberClient
+}
+
+func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov0" title="0">{
+        conn, err := grpc.NewClient(
+                address,
+                grpc.WithTransportCredentials(insecure.NewCredentials()),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;Client{
+                log:  log,
+                conn: conn,
+                pb:   subscriberpb.NewSubscriberClient(conn),
         }, nil</span>
 }
 
 func (c *Client) Ping(ctx context.Context) domain.PingStatus <span class="cov0" title="0">{
-        _, err := c.pb.Ping(ctx, &amp;subscirberpb.PingRequest{})
+        _, err := c.pb.Ping(ctx, &amp;subscriberpb.PingRequest{})
         if err != nil </span><span class="cov0" title="0">{
                 c.log.Error("subscriber ping failed", "error", err)
                 return domain.PingStatusDown
@@ -238,17 +339,23 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus <span class="cov0" 
         <span class="cov0" title="0">return domain.PingStatusUp</span>
 }
 
+func (c *Client) Name() string <span class="cov0" title="0">{
+        return "subscriber"
+}</span>
+
 func (c *Client) Close() error <span class="cov0" title="0">{
         return c.conn.Close()
-}</pre>
+}</span>
+</pre>
 		
-		<pre class="file" id="file3" style="display: none">package http
+		<pre class="file" id="file4" style="display: none">package http
 
 import (
         "context"
         "log/slog"
         "net/http"
         "repo-stat/api/config"
+        "repo-stat/api/internal/adapter/processor"
         "repo-stat/api/internal/adapter/subscriber"
         "repo-stat/api/internal/usecase"
 )
@@ -260,22 +367,30 @@ func NewHandler(ctx context.Context, log *slog.Logger, cfg config.Config) (http.
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">pingUseCase := usecase.NewPing(subscriberClient)
+        <span class="cov0" title="0">processorClient, err := processor.NewClient(cfg.Services.Processor, log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("cannot init processor adapter", "error", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">pingUseCase := usecase.NewPing([]usecase.Pinger{subscriberClient, processorClient})
+        repoUseCase := usecase.NewGetRepositoryUseCase(processorClient)
 
         mux := http.NewServeMux()
-        AddRoutes(mux, log, pingUseCase)
+        AddRoutes(mux, log, pingUseCase, repoUseCase)
 
         var handler http.Handler = mux
         return handler, nil</span>
 }
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package http
+		<pre class="file" id="file5" style="display: none">package http
 
 import (
         "encoding/json"
         "log/slog"
         "net/http"
+        "repo-stat/api/internal/domain"
         "repo-stat/api/internal/dto"
         "repo-stat/api/internal/usecase"
 )
@@ -285,11 +400,67 @@ func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc <span
                 status := ping.Execute(r.Context())
 
                 response := dto.PingResponse{
-                        Reply: string(status),
+                        Status:   status.Status,
+                        Services: status.Services,
                 }
 
                 w.Header().Set("Content-Type", "application/json")
-                w.WriteHeader(http.StatusOK)
+
+                if status.Status == domain.StatusDegraded </span><span class="cov0" title="0">{
+                        w.WriteHeader(http.StatusServiceUnavailable)
+                }</span> else<span class="cov0" title="0"> {
+                        w.WriteHeader(http.StatusOK)
+                }</span>
+
+                <span class="cov0" title="0">if err := json.NewEncoder(w).Encode(response); err != nil </span><span class="cov0" title="0">{
+                        log.Error("failed to write ping response", "error", err)
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package http
+
+import (
+        "encoding/json"
+        "log/slog"
+        "net/http"
+        "regexp"
+        "repo-stat/api/internal/dto"
+        "repo-stat/api/internal/usecase"
+)
+
+var regularExpression = regexp.MustCompile(`github\.com/([^/]+)/([^/]+)`)
+
+func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase.GetRepositoryUseCase) http.HandlerFunc <span class="cov0" title="0">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                rawURL := r.URL.Query().Get("url")
+
+                matches := regularExpression.FindStringSubmatch(rawURL)
+                if len(matches) &lt; 3 </span><span class="cov0" title="0">{
+                        log.Warn("invalid url provided", "url", rawURL)
+                        http.Error(w, "Invalid GitHub URL", http.StatusBadRequest)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">ownerName, repoName := matches[1], matches[2]
+
+                repository, err := getRepositoryUseCase.Execute(r.Context(), ownerName, repoName)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Error("usecase error", "err", err)
+                        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">response := dto.Repository{
+                        Name:        repository.Name,
+                        Description: repository.Description,
+                        Stars:       repository.Stars,
+                        Forks:       repository.Forks,
+                        CreatedAt:   repository.CreatedAt,
+                }
+
+                w.Header().Set("Content-Type", "application/json")
 
                 if err := json.NewEncoder(w).Encode(response); err != nil </span><span class="cov0" title="0">{
                         log.Error("failed to write ping response", "error", err)
@@ -298,7 +469,7 @@ func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc <span
 }
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package http
+		<pre class="file" id="file7" style="display: none">package http
 
 import (
         "log/slog"
@@ -306,12 +477,43 @@ import (
         "repo-stat/api/internal/usecase"
 )
 
-func AddRoutes(mux *http.ServeMux, log *slog.Logger, ping *usecase.Ping) <span class="cov0" title="0">{
-        mux.Handle("GET /api/ping", NewPingHandler(log, ping))
+func AddRoutes(
+        mux *http.ServeMux,
+        log *slog.Logger,
+        pingUC *usecase.Ping,
+        repoUC *usecase.GetRepositoryUseCase,
+) <span class="cov0" title="0">{
+        mux.Handle("GET /api/ping", NewPingHandler(log, pingUC))
+        mux.Handle("GET /api/repositories/info", NewGetRepositoryInfoHandler(log, repoUC))
 }</span>
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package usecase
+		<pre class="file" id="file8" style="display: none">package usecase
+
+import (
+        "context"
+
+        "repo-stat/pkg/domain"
+)
+
+type RepositoryFetcher interface {
+        Fetch(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error)
+}
+
+type GetRepositoryUseCase struct {
+        fetcher RepositoryFetcher
+}
+
+func NewGetRepositoryUseCase(fetcher RepositoryFetcher) *GetRepositoryUseCase <span class="cov0" title="0">{
+        return &amp;GetRepositoryUseCase{fetcher: fetcher}
+}</span>
+
+func (useCase *GetRepositoryUseCase) Execute(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error) <span class="cov0" title="0">{
+        return useCase.fetcher.Fetch(ctx, ownerName, repoName)
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package usecase
 
 import (
         "context"
@@ -320,23 +522,236 @@ import (
 
 type Pinger interface {
         Ping(ctx context.Context) domain.PingStatus
+        Name() string
 }
 
 type Ping struct {
-        pinger Pinger
+        pingers []Pinger
 }
 
-func NewPing(pinger Pinger) *Ping <span class="cov0" title="0">{
+func NewPing(pingers []Pinger) *Ping <span class="cov0" title="0">{
         return &amp;Ping{
-                pinger: pinger,
+                pingers: pingers,
         }
 }</span>
 
-func (u *Ping) Execute(ctx context.Context) domain.PingStatus <span class="cov0" title="0">{
-        return u.pinger.Ping(ctx)
-}</pre>
+func (u *Ping) Execute(ctx context.Context) domain.HealthStatus <span class="cov0" title="0">{
+        services := make([]domain.ServiceStatus, len(u.pingers))
+        healthStatus := domain.HealthStatus{
+                Status:   domain.StatusOk,
+                Services: services,
+        }
+
+        for i := 0; i &lt; len(u.pingers); i++ </span><span class="cov0" title="0">{
+                pingStatus := u.pingers[i].Ping(ctx)
+                serviceName := u.pingers[i].Name()
+
+                services[i] = domain.ServiceStatus{
+                        Status: pingStatus,
+                        Name:   serviceName,
+                }
+
+                if pingStatus == domain.PingStatusDown </span><span class="cov0" title="0">{
+                        healthStatus.Status = domain.StatusDegraded
+                }</span>
+        }
+
+        <span class="cov0" title="0">return healthStatus</span>
+}
+</pre>
 		
-		<pre class="file" id="file7" style="display: none">package env
+		<pre class="file" id="file10" style="display: none">package main
+
+import (
+        "context"
+        "flag"
+        "fmt"
+        "net"
+        "os"
+        "os/signal"
+
+        "repo-stat/api/config"
+        "repo-stat/collector/internal/adapter/github"
+        grpchandler "repo-stat/collector/internal/controller/grpc"
+        "repo-stat/collector/internal/usecase"
+        "repo-stat/platform/logger"
+        collectorpb "repo-stat/proto/collector"
+
+        "google.golang.org/grpc"
+)
+
+func main() <span class="cov0" title="0">{
+        ctx := context.Background()
+        ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+        if err := run(ctx); err != nil </span><span class="cov0" title="0">{
+                _, err = fmt.Fprintln(os.Stderr, err)
+                if err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("launching server error: %s\n", err)
+                }</span>
+                <span class="cov0" title="0">cancel()
+                os.Exit(1)</span>
+        }
+        <span class="cov0" title="0">cancel()</span>
+}
+
+func run(ctx context.Context) error <span class="cov0" title="0">{
+        // config
+        var configPath string
+        flag.StringVar(&amp;configPath, "config", "config.yaml", "server configuration file")
+        flag.Parse()
+
+        cfg := config.MustLoad(configPath)
+
+        // logger
+        log := logger.MustMakeLogger(cfg.Logger.LogLevel)
+
+        log.Info("starting server...")
+        log.Debug("debug messages are enabled")
+        log.Info("Collector gRPC server is running on " + cfg.Services.Collector)
+
+        // Hendlers setup
+        client := github.GitHubClient{}
+        getRepoUseCase := usecase.NewGitHubFetchUseCase(client)
+        grpcHandler := grpchandler.NewHandler(getRepoUseCase)
+        listener, err := net.Listen("tcp", cfg.Services.Collector)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Listen error: %w", err)
+        }</span>
+
+        // Server setup
+        <span class="cov0" title="0">grpcServer := grpc.NewServer()
+        collectorpb.RegisterCollectorServer(grpcServer, grpcHandler)
+
+        go func() </span><span class="cov0" title="0">{
+                grpcServer.Serve(listener)
+        }</span>()
+        <span class="cov0" title="0">&lt;-ctx.Done()
+        grpcServer.GracefulStop()
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package github
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "net/http"
+
+        "repo-stat/pkg/domain"
+)
+
+type GithubRepository struct {
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        Stars       int    `json:"stargazers_count"`
+        Forks       int    `json:"forks_count"`
+        CreatedAt   string `json:"created_at"`
+}
+
+type GitHubClient struct {
+}
+
+func (client GitHubClient) Fetch(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error) <span class="cov0" title="0">{
+        url := fmt.Sprintf("https://api.github.com/repos/%s/%s", ownerName, repoName)
+        request, httpRequestErr := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+        if httpRequestErr != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("http request error: %w", httpRequestErr)
+        }</span>
+
+        <span class="cov0" title="0">request.Header.Set("User-Agent", "repo-stat-collector")
+
+        response, httpResponseErr := http.DefaultClient.Do(request)
+        if httpResponseErr != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("http response error: %w", httpResponseErr)
+        }</span>
+        <span class="cov0" title="0">defer response.Body.Close()
+
+        if response.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("github api error: %s", response.Status)
+        }</span>
+
+        <span class="cov0" title="0">var repo GithubRepository
+        if err := json.NewDecoder(response.Body).Decode(&amp;repo); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return repo.toDomain(), nil</span>
+}
+
+func (githubRepo *GithubRepository) toDomain() *domain.Repository <span class="cov0" title="0">{
+        return &amp;domain.Repository{
+                Name:        githubRepo.Name,
+                Description: githubRepo.Description,
+                Stars:       uint32(githubRepo.Stars),
+                Forks:       uint32(githubRepo.Forks),
+                CreatedAt:   githubRepo.CreatedAt,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package controller
+
+import (
+        "context"
+        "repo-stat/collector/internal/usecase"
+        collectorpb "repo-stat/proto/collector"
+)
+
+type Handler struct {
+        collectorpb.UnimplementedCollectorServer
+        useCase *usecase.GitHubFetchUseCase
+}
+
+func NewHandler(uc *usecase.GitHubFetchUseCase) *Handler <span class="cov0" title="0">{
+        return &amp;Handler{useCase: uc}
+}</span>
+
+func (h *Handler) GetRepositoryInfo(
+        ctx context.Context,
+        request *collectorpb.GetRepositoryInfoRequest,
+) (*collectorpb.GetRepositoryInfoResponse, error) <span class="cov0" title="0">{
+        repoInfo, err := h.useCase.Execute(ctx, request.Owner, request.Repo)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;collectorpb.GetRepositoryInfoResponse{
+                FullName:    repoInfo.Name,
+                Description: repoInfo.Description,
+                Stars:       repoInfo.Stars,
+                Forks:       repoInfo.Forks,
+                CreatedAt:   repoInfo.CreatedAt,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package usecase
+
+import (
+        "context"
+        "repo-stat/pkg/domain"
+)
+
+type GitHubFetcher interface {
+        Fetch(ctx context.Context, ownerName, repoName string) (*domain.Repository, error)
+}
+
+type GitHubFetchUseCase struct {
+        fetcher GitHubFetcher
+}
+
+func NewGitHubFetchUseCase(fetcher GitHubFetcher) *GitHubFetchUseCase <span class="cov0" title="0">{
+        return &amp;GitHubFetchUseCase{fetcher: fetcher}
+}</span>
+
+func (uc *GitHubFetchUseCase) Execute(ctx context.Context, ownerName, repoName string) (*domain.Repository, error) <span class="cov0" title="0">{
+        return uc.fetcher.Fetch(ctx, ownerName, repoName)
+}</span>
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package env
 
 import (
         "log"
@@ -352,9 +767,10 @@ func MustLoad(path string, cfg interface{}) <span class="cov0" title="0">{
         <span class="cov0" title="0">if err := cleanenv.ReadEnv(cfg); err != nil </span><span class="cov0" title="0">{
                 log.Fatalf("cannot read env: %v", err)
         }</span>
-}</pre>
+}
+</pre>
 		
-		<pre class="file" id="file8" style="display: none">package grpcserver
+		<pre class="file" id="file15" style="display: none">package grpcserver
 
 import (
         "context"
@@ -396,9 +812,10 @@ func (s *Server) Run(ctx context.Context) error <span class="cov0" title="0">{
 
 func (s *Server) GRPC() *grpc.Server <span class="cov0" title="0">{
         return s.srv
-}</pre>
+}</span>
+</pre>
 		
-		<pre class="file" id="file9" style="display: none">package httpserver
+		<pre class="file" id="file16" style="display: none">package httpserver
 
 import (
         "context"
@@ -443,9 +860,10 @@ func (s *Server) Run(ctx context.Context) error <span class="cov0" title="0">{
                 return nil
         }</span>
         <span class="cov0" title="0">return err</span>
-}</pre>
+}
+</pre>
 		
-		<pre class="file" id="file10" style="display: none">package logger
+		<pre class="file" id="file17" style="display: none">package logger
 
 import (
         "log/slog"
@@ -473,7 +891,216 @@ func MustMakeLogger(logLevel string) *slog.Logger <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file11" style="display: none">package main
+		<pre class="file" id="file18" style="display: none">package main
+
+import (
+        "context"
+        "flag"
+        "fmt"
+        "net"
+        "os"
+        "os/signal"
+
+        "google.golang.org/grpc"
+
+        "repo-stat/api/config"
+        "repo-stat/platform/logger"
+        "repo-stat/processor/internal/adapter/collector"
+        grpccontroller "repo-stat/processor/internal/controller/grpc"
+        "repo-stat/processor/internal/usecase"
+        processorpb "repo-stat/proto/processor"
+)
+
+func run(ctx context.Context) error <span class="cov0" title="0">{
+        // config
+        var configPath string
+        flag.StringVar(&amp;configPath, "config", "config.yaml", "server configuration file")
+        flag.Parse()
+
+        cfg := config.MustLoad(configPath)
+
+        // logger
+        log := logger.MustMakeLogger(cfg.Logger.LogLevel)
+
+        log.Info("starting server...")
+        log.Debug("debug messages are enabled")
+
+        // Server setup
+        listener, err := net.Listen("tcp", cfg.Services.Processor)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("failed to listen", "error", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">collClient, err := collector.NewClient(cfg.Services.Collector, log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("failed to init collector client", "err", err)
+                return err
+        }</span>
+        <span class="cov0" title="0">defer collClient.Close()
+
+        // Setup handlers
+        repoUC := usecase.NewGetRepositoryUseCase(collClient)
+        handler := grpccontroller.NewHandler(repoUC)
+
+        grpcServer := grpc.NewServer()
+        processorpb.RegisterProcessorServer(grpcServer, handler)
+
+        go func() </span><span class="cov0" title="0">{
+                grpcServer.Serve(listener)
+        }</span>()
+        <span class="cov0" title="0">&lt;-ctx.Done()
+        grpcServer.GracefulStop()
+        return nil</span>
+}
+
+func main() <span class="cov0" title="0">{
+        ctx := context.Background()
+        ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+        if err := run(ctx); err != nil </span><span class="cov0" title="0">{
+                _, err = fmt.Fprintln(os.Stderr, err)
+                if err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("launching server error: %s\n", err)
+                }</span>
+                <span class="cov0" title="0">cancel()
+                os.Exit(1)</span>
+        }
+        <span class="cov0" title="0">cancel()</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package collector
+
+import (
+        "context"
+        "log/slog"
+        "repo-stat/pkg/domain"
+
+        collectorpb "repo-stat/proto/collector"
+
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials/insecure"
+)
+
+type Client struct {
+        log  *slog.Logger
+        conn *grpc.ClientConn
+        pb   collectorpb.CollectorClient
+}
+
+func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov0" title="0">{
+        conn, err := grpc.NewClient(
+                address,
+                grpc.WithTransportCredentials(insecure.NewCredentials()),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;Client{
+                log:  log,
+                conn: conn,
+                pb:   collectorpb.NewCollectorClient(conn),
+        }, nil</span>
+}
+
+func (c *Client) Fetch(ctx context.Context, owner string, repository string) (*domain.Repository, error) <span class="cov0" title="0">{
+        getRepositoryInfoRequest := &amp;collectorpb.GetRepositoryInfoRequest{
+                Owner: owner,
+                Repo:  repository,
+        }
+
+        response, err := c.pb.GetRepositoryInfo(ctx, getRepositoryInfoRequest)
+        if err != nil </span><span class="cov0" title="0">{
+                c.log.Error("repository GetRepositoryInfo failed", "error", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;domain.Repository{
+                Name:        response.FullName,
+                Description: response.Description,
+                Stars:       response.Stars,
+                Forks:       response.Forks,
+                CreatedAt:   response.CreatedAt,
+        }, nil</span>
+}
+
+func (c *Client) Close() error <span class="cov0" title="0">{
+        return c.conn.Close()
+}</span>
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package grpc
+
+import (
+        "context"
+        "repo-stat/processor/internal/usecase"
+        processorpb "repo-stat/proto/processor"
+)
+
+type Handler struct {
+        processorpb.UnimplementedProcessorServer
+        useCase *usecase.GetRepositoryUseCase
+}
+
+func NewHandler(uc *usecase.GetRepositoryUseCase) *Handler <span class="cov0" title="0">{
+        return &amp;Handler{
+                useCase: uc,
+        }
+}</span>
+
+func (h *Handler) GetRepositoryInfo(
+        ctx context.Context,
+        req *processorpb.GetRepositoryInfoRequest,
+) (*processorpb.GetRepositoryInfoResponse, error) <span class="cov0" title="0">{
+
+        owner := req.GetOwner()
+        repoName := req.GetRepo()
+
+        repo, err := h.useCase.Execute(ctx, owner, repoName)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;processorpb.GetRepositoryInfoResponse{
+                FullName:    repo.Name,
+                Description: repo.Description,
+                Stars:       repo.Stars,
+                Forks:       repo.Forks,
+                CreatedAt:   repo.CreatedAt,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file21" style="display: none">package usecase
+
+import (
+        "context"
+        "fmt"
+        "repo-stat/pkg/domain"
+)
+
+type CollectorFetcher interface {
+        Fetch(ctx context.Context, owner, repo string) (*domain.Repository, error)
+}
+
+type GetRepositoryUseCase struct {
+        fetcher CollectorFetcher
+}
+
+func NewGetRepositoryUseCase(fetcher CollectorFetcher) *GetRepositoryUseCase <span class="cov0" title="0">{
+        return &amp;GetRepositoryUseCase{fetcher: fetcher}
+}</span>
+
+func (uc GetRepositoryUseCase) Execute(ctx context.Context, owner, repo string) (*domain.Repository, error) <span class="cov0" title="0">{
+        if owner == "" || repo == "" </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid arguments: owner and repo must not be empty")
+        }</span>
+        <span class="cov0" title="0">return uc.fetcher.Fetch(ctx, owner, repo)</span>
+}
+</pre>
+		
+		<pre class="file" id="file22" style="display: none">package main
 
 import (
         "context"
@@ -531,7 +1158,7 @@ func main() <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file12" style="display: none">package config
+		<pre class="file" id="file23" style="display: none">package config
 
 import (
         "repo-stat/platform/env"
@@ -558,9 +1185,10 @@ func MustLoad(path string) Config <span class="cov0" title="0">{
         var cfg Config
         env.MustLoad(path, &amp;cfg)
         return cfg
-}</pre>
+}</span>
+</pre>
 		
-		<pre class="file" id="file13" style="display: none">package grpc
+		<pre class="file" id="file24" style="display: none">package grpc
 
 import (
         "context"
@@ -591,7 +1219,7 @@ func (s *Server) Ping(ctx context.Context, _ *subscriberpb.PingRequest) (*subscr
 }</span>
 </pre>
 		
-		<pre class="file" id="file14" style="display: none">package usecase
+		<pre class="file" id="file25" style="display: none">package usecase
 
 import "context"
 

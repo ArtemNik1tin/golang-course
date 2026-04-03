@@ -7,18 +7,39 @@ import (
 
 type Pinger interface {
 	Ping(ctx context.Context) domain.PingStatus
+	Name() string
 }
 
 type Ping struct {
-	pinger Pinger
+	pingers []Pinger
 }
 
-func NewPing(pinger Pinger) *Ping {
+func NewPing(pingers []Pinger) *Ping {
 	return &Ping{
-		pinger: pinger,
+		pingers: pingers,
 	}
 }
 
-func (u *Ping) Execute(ctx context.Context) domain.PingStatus {
-	return u.pinger.Ping(ctx)
+func (u *Ping) Execute(ctx context.Context) domain.HealthStatus {
+	services := make([]domain.ServiceStatus, len(u.pingers))
+	healthStatus := domain.HealthStatus{
+		Status:   domain.StatusOk,
+		Services: services,
+	}
+
+	for i := 0; i < len(u.pingers); i++ {
+		pingStatus := u.pingers[i].Ping(ctx)
+		serviceName := u.pingers[i].Name()
+
+		services[i] = domain.ServiceStatus{
+			Status: pingStatus,
+			Name:   serviceName,
+		}
+
+		if pingStatus == domain.PingStatusDown {
+			healthStatus.Status = domain.StatusDegraded
+		}
+	}
+
+	return healthStatus
 }
