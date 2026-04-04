@@ -1,0 +1,93 @@
+definitions:
+  domain.PingStatus:
+    enum:
+    - up
+    - down
+    type: string
+    x-enum-varnames:
+    - PingStatusUp
+    - PingStatusDown
+  domain.ServiceStatus:
+    properties:
+      name:
+        type: string
+      status:
+        $ref: '#/definitions/domain.PingStatus'
+    type: object
+  dto.PingResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/domain.ServiceStatus'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.Repository:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      forks:
+        type: integer
+      full_name:
+        type: string
+      stars:
+        type: integer
+    type: object
+  http.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/ping:
+    get:
+      description: Check status of all backend services (Processor, Subscriber)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+      summary: Ping services
+      tags:
+      - health
+  /api/repositories/info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve basic information about a GitHub repository
+      parameters:
+      - description: GitHub repository URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Repository'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get repository information
+      tags:
+      - repositories
+swagger: "2.0"

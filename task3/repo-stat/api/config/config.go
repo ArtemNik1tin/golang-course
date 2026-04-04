@@ -11,7 +11,11 @@ type App struct {
 }
 
 type Services struct {
-	Subscriber string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
+	Subscriber       string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
+	Processor        string `yaml:"processor" env:"PROCESSOR_ADDRESS" env-default:"localhost:50001"`
+	ProcessorAddress string `yaml:"processor_address" env:"PROCESSOR_LISTEN_ADDRESS" env-default:"localhost:50001"`
+	Collector        string `yaml:"collector" env:"COLLECTOR_ADDRESS" env-default:"localhost:50002"`
+	CollectorAddress string `yaml:"collector_address" env:"COLLECTOR_LISTEN_ADDRESS" env-default:"localhost:50002"`
 }
 
 type Config struct {
