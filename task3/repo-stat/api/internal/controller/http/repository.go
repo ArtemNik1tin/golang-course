@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"repo-stat/api/internal/adapter/grpcerrors"
 	"repo-stat/api/internal/dto"
 	"repo-stat/api/internal/usecase"
 )
@@ -53,9 +54,10 @@ func NewGetRepositoryInfoHandler(log *slog.Logger, getRepositoryUseCase *usecase
 		repository, err := getRepositoryUseCase.Execute(r.Context(), ownerName, repoName)
 		if err != nil {
 			log.Error("usecase error", "err", err)
+			httpCode, httpMsg := grpcerrors.ToHTTP(err)
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Internal Server Error"})
+			w.WriteHeader(httpCode)
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: httpMsg})
 			return
 		}
 
