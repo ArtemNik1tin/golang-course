@@ -10,4 +10,3 @@ logger:
 
 services:
   collector: "collector:50002"
-  collector_address: ":50002"
