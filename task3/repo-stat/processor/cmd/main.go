@@ -10,8 +10,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"repo-stat/api/config"
 	"repo-stat/platform/logger"
+	"repo-stat/processor/config"
 	"repo-stat/processor/internal/adapter/collector"
 	grpccontroller "repo-stat/processor/internal/controller/grpc"
 	"repo-stat/processor/internal/usecase"
@@ -33,7 +33,7 @@ func run(ctx context.Context) error {
 	log.Debug("debug messages are enabled")
 
 	// Server setup
-	listener, err := net.Listen("tcp", cfg.Services.ProcessorAddress)
+	listener, err := net.Listen("tcp", cfg.GRPC.Address)
 	if err != nil {
 		log.Error("failed to listen", "error", err)
 		return err
@@ -54,7 +54,7 @@ func run(ctx context.Context) error {
 	processorpb.RegisterProcessorServer(grpcServer, handler)
 
 	go func() {
-		log.Info("Processor gRPC server is running on " + cfg.Services.Processor)
+		log.Info("Processor gRPC server is running on " + cfg.GRPC.Address)
 		_ = grpcServer.Serve(listener)
 	}()
 	<-ctx.Done()

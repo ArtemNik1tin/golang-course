@@ -11,6 +11,4 @@ logger:
 services:
   subscriber: "subscriber:8080"
   processor: "processor:50001"
-  processor_address: ":50001"
   collector: "collector:50002"
-  collector_address: ":50002"

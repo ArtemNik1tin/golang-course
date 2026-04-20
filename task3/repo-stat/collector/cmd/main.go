@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/signal"
 
-	"repo-stat/api/config"
+	"repo-stat/collector/config"
 	"repo-stat/collector/internal/adapter/github"
 	grpchandler "repo-stat/collector/internal/controller/grpc"
 	"repo-stat/collector/internal/usecase"
@@ -45,13 +45,12 @@ func run(ctx context.Context) error {
 
 	log.Info("starting server...")
 	log.Debug("debug messages are enabled")
-	log.Info("Collector gRPC server is running on " + cfg.Services.Collector)
 
 	// Hendlers setup
 	client := github.GitHubClient{}
 	getRepoUseCase := usecase.NewGitHubFetchUseCase(client)
 	grpcHandler := grpchandler.NewHandler(getRepoUseCase)
-	listener, err := net.Listen("tcp", cfg.Services.CollectorAddress)
+	listener, err := net.Listen("tcp", cfg.GRPC.Address)
 	if err != nil {
 		return fmt.Errorf("listen error: %w", err)
 	}
@@ -61,6 +60,7 @@ func run(ctx context.Context) error {
 	collectorpb.RegisterCollectorServer(grpcServer, grpcHandler)
 
 	go func() {
+		log.Info("Collector gRPC server is running on " + cfg.GRPC.Address)
 		_ = grpcServer.Serve(listener)
 	}()
 	<-ctx.Done()
