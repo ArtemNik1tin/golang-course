@@ -6,10 +6,6 @@ import (
 	"repo-stat/pkg/domain"
 )
 
-type RepositoryFetcher interface {
-	Fetch(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error)
-}
-
 type GetRepositoryUseCase struct {
 	fetcher RepositoryFetcher
 }
