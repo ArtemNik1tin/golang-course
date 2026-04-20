@@ -6,11 +6,12 @@ services:
       dockerfile: Dockerfile.processor
     container_name: processor
     restart: unless-stopped
+    ports:
+      - 50001:50001
     volumes:
-      - ./repo-stat/api/config/config.yaml:/config.yaml
+      - ./repo-stat/processor/config/config.yaml:/config.yaml
     environment:
-      - PROCESSOR_ADDRESS=:50001
-      - COLLECTOR_ADDRESS=collector:50002
+      - services.collector=collector:50002
     depends_on:
       - collector
 
@@ -22,9 +23,7 @@ services:
     container_name: collector
     restart: unless-stopped
     volumes:
-      - ./repo-stat/api/config/config.yaml:/config.yaml
-    environment:
-      - COLLECTOR_ADDRESS=:50002
+      - ./repo-stat/collector/config/config.yaml:/config.yaml
 
   api:
     image: api:latest
@@ -56,7 +55,6 @@ services:
     volumes:
       - ./repo-stat/subscriber/config/config.yaml:/config.yaml
     environment:
-      - LISTEN_ADDRESS=:8080
       - API_ADDRESS=api:8080
   tests:
     image: tests:latest
