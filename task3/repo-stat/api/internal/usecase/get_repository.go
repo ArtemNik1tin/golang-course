@@ -1,0 +1,19 @@
+package usecase
+
+import (
+	"context"
+
+	"repo-stat/pkg/domain"
+)
+
+type GetRepositoryUseCase struct {
+	fetcher RepositoryFetcher
+}
+
+func NewGetRepositoryUseCase(fetcher RepositoryFetcher) *GetRepositoryUseCase {
+	return &GetRepositoryUseCase{fetcher: fetcher}
+}
+
+func (useCase *GetRepositoryUseCase) Execute(ctx context.Context, ownerName string, repoName string) (*domain.Repository, error) {
+	return useCase.fetcher.Fetch(ctx, ownerName, repoName)
+}
